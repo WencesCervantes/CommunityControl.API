@@ -18,8 +18,5 @@ WORKDIR /app
 # Copiar publicación desde la etapa anterior
 COPY --from=build /app/publish .
 
-# Render define $PORT, así que lo usamos
-ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
-
 # Iniciar API
 ENTRYPOINT ["dotnet", "CommunityControl.API.dll"]
