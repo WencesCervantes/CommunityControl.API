@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Stream con Bearer</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 20px;
+    }
+    canvas {
+      border: 2px solid #444;
+      border-radius: 12px;
+      max-width: 90vw;
+    }
+  </style>
+</head>
+<body>
+
+<h1>CommunityControl – Stream con Bearer</h1>
+<canvas id="canvas"></canvas>
+
+<script>
+  // ⬇️ Pega aquí tu token (con la palabra Bearer)
+  const token = "Bearer AQUÍ_TU_TOKEN";
+
+  // ⬇️ Endpoint de stream protegido
+  const url = "https://communitycontrol-api.onrender.com/camera/stream";
+
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  // Función para iniciar el stream MJPEG
+  async function startStream() {
+    const response = await fetch(url, {
+      headers: {
+        "Authorization": token
+      }
+    });
+
+    if (!response.ok) {
+      console.error("Error:", response.status);
+      alert("Error " + response.status);
+      return;
+    }
+
+    const reader = response.body.getReader();
+    let bytes = [];
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      for (let i = 0; i < value.length; i++) {
+        bytes.push(value[i]);
+      }
+
+      // Buscar marcas JPEG (inicio y fin)
+      let start = bytes.indexOf(0xFF);
+      let end = bytes.indexOf(0xD9);
+
+      if (start !== -1 && end !== -1 && end > start) {
+        let frame = bytes.slice(start, end + 1);
+        bytes = bytes.slice(end + 1);
+
+        let blob = new Blob([new Uint8Array(frame)], { type: "image/jpeg" });
+        let img = new Image();
+
+        img.onload = function () {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+        };
+
+        img.src = URL.createObjectURL(blob);
+      }
+    }
+  }
+
+  startStream();
+</script>
+
+</body>
+</html>
