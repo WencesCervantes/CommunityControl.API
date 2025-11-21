@@ -1,0 +1,6 @@
+@CommunityControl.API_HostAddress = http://localhost:5216
+
+GET {{CommunityControl.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
